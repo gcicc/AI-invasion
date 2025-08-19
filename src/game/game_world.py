@@ -1,10 +1,17 @@
 import pygame
 import random
+import sys
+import os
 from typing import List
 from .alien import Alien
 from .human import Human
 from .resource_manager import ResourceManager
+from .upgrade_system import UpgradeSystem
 from .constants import *
+
+# Add ui module to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from ui.hud import HUD
 
 class GameWorld:
     def __init__(self):
@@ -20,6 +27,12 @@ class GameWorld:
         
         # Add frame counter for debugging
         self.frame_count = 0
+        
+        # Initialize HUD
+        self.hud = HUD()
+        
+        # Initialize upgrade system
+        self.upgrade_system = UpgradeSystem(self.alien, self.resources)
     
     def spawn_humans(self):
         num_humans = 20
@@ -48,6 +61,9 @@ class GameWorld:
         self.check_base_interaction()
         
         self.resources.update(dt)
+        
+        # Update HUD
+        self.hud.update(self)
     
     def check_collisions(self):
         alien_rect = self.alien.get_rect()
@@ -86,16 +102,8 @@ class GameWorld:
         # Draw alien
         self.alien.render(screen)
         
-        # Draw UI
-        self.render_ui(screen)
-        
-        # Debug info - add frame counter and movement hint
-        try:
-            debug_font = pygame.font.Font(None, 24) 
-            debug_text = debug_font.render(f"Frame: {self.frame_count} | Use WASD to move alien", True, (255, 255, 0))
-            screen.blit(debug_text, (10, SCREEN_HEIGHT - 30))
-        except:
-            pass
+        # Draw enhanced HUD
+        self.hud.render(screen, self)
     
     def render_ui(self, screen: pygame.Surface):
         font = pygame.font.Font(None, 36)

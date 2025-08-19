@@ -3,7 +3,12 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(timeout:*)",
+      "Bash(python:*)",
+      "Bash(rm:*)",
+      "Bash(del nul)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

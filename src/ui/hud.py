@@ -154,7 +154,55 @@ class HUD:
         stats_surface = self.font_small.render(stats_text, True, (200, 200, 200))
         screen.blit(stats_surface, (10, SCREEN_HEIGHT - 50))
         
+        # Quest display
+        self.render_quests(screen, game_world)
+        
         # Controls reminder
-        controls_text = "WASD: Move | ESC: Menu | U: Upgrades"
+        controls_text = "WASD: Move | ESC: Menu | U: Upgrades | Q: Claim Quests"
         controls_surface = self.font_small.render(controls_text, True, (150, 150, 150))
         screen.blit(controls_surface, (10, SCREEN_HEIGHT - 25))
+    
+    def render_quests(self, screen: pygame.Surface, game_world):
+        """Render active quests on the right side of screen"""
+        quest_x = SCREEN_WIDTH - 250
+        quest_y = 10
+        
+        # Quest background
+        quest_bg = pygame.Surface((240, 200))
+        quest_bg.set_alpha(180)
+        quest_bg.fill((0, 0, 0))
+        screen.blit(quest_bg, (quest_x, quest_y))
+        
+        # Quest title
+        title_text = self.font_small.render("QUESTS", True, (255, 255, 0))
+        screen.blit(title_text, (quest_x + 10, quest_y + 5))
+        
+        y_offset = quest_y + 30
+        for i, quest in enumerate(game_world.quest_system.get_active_quests()):
+            if i >= 3:  # Limit to 3 visible quests
+                break
+                
+            # Quest status color
+            if quest.is_completed():
+                color = (0, 255, 0)  # Green for completed
+                status_text = "COMPLETE!"
+            else:
+                color = WHITE
+                status_text = f"{quest.current_value}/{quest.target_value}"
+            
+            # Quest title
+            title_surface = self.font_small.render(quest.title, True, color)
+            screen.blit(title_surface, (quest_x + 10, y_offset))
+            
+            # Quest progress
+            progress_surface = self.font_small.render(status_text, True, color)
+            screen.blit(progress_surface, (quest_x + 10, y_offset + 20))
+            
+            y_offset += 50
+        
+        # Completed quests ready to claim
+        completed_quests = game_world.quest_system.get_completed_quests()
+        if completed_quests:
+            claim_text = f"Press Q to claim {len(completed_quests)} quest(s)!"
+            claim_surface = self.font_small.render(claim_text, True, (255, 255, 0))
+            screen.blit(claim_surface, (quest_x + 10, y_offset + 10))

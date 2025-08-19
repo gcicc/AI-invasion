@@ -23,6 +23,9 @@ class UpgradeSystem:
         self.resources = resources
         self.upgrades: Dict[str, Upgrade] = {}
         
+        # Link alien to upgrade system for evolution visuals
+        self.alien._upgrade_system_ref = self
+        
         self.init_upgrades()
     
     def init_upgrades(self):

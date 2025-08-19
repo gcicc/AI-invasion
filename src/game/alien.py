@@ -18,6 +18,10 @@ class Alien:
         
         self.vel_x = 0.0
         self.vel_y = 0.0
+        
+        # Animation properties
+        self.animation_timer = 0.0
+        self.base_size = self.size
     
     def update(self, dt: float, keys_pressed):
         if not self.alive:
@@ -44,6 +48,16 @@ class Alien:
         
         self.x = max(self.size, min(SCREEN_WIDTH - self.size, self.x))
         self.y = max(self.size, min(SCREEN_HEIGHT - self.size, self.y))
+        
+        # Update animation
+        self.animation_timer += dt
+        
+        # Pulse effect when carrying cargo
+        if self.cargo > 0:
+            pulse = 1.0 + 0.2 * math.sin(self.animation_timer * 4)  # Fast pulse
+            self.size = int(self.base_size * pulse)
+        else:
+            self.size = self.base_size
     
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(self.x - self.size//2, self.y - self.size//2, self.size, self.size)
@@ -62,16 +76,64 @@ class Alien:
         self.cargo_types = []
         return cargo_types
     
+    def get_evolution_color(self):
+        """Get alien color based on upgrade levels"""
+        total_upgrades = 0
+        if hasattr(self, '_upgrade_system_ref'):
+            for upgrade in self._upgrade_system_ref.upgrades.values():
+                total_upgrades += upgrade.level
+        
+        # Evolution colors based on total upgrade levels
+        if total_upgrades == 0:
+            return PURPLE  # Base alien
+        elif total_upgrades < 5:
+            return (150, 0, 200)  # Slightly evolved
+        elif total_upgrades < 10:
+            return (200, 50, 150)  # More evolved
+        elif total_upgrades < 15:
+            return (255, 100, 100)  # Highly evolved
+        else:
+            return (255, 200, 0)  # Legendary
+    
     def render(self, screen: pygame.Surface):
         if not self.alive:
             return
             
-        color = PURPLE
-        if self.cargo > 0:
-            color = (min(255, 128 + self.cargo * 25), 0, min(255, 128 + self.cargo * 25))
+        # Base color with evolution
+        color = self.get_evolution_color()
         
+        # Cargo effect overlay
+        if self.cargo > 0:
+            # Pulsing glow when carrying cargo
+            glow_intensity = int(50 * (1.0 + math.sin(self.animation_timer * 6)))
+            color = (
+                min(255, color[0] + glow_intensity),
+                min(255, color[1] + glow_intensity // 2),
+                min(255, color[2] + glow_intensity)
+            )
+        
+        # Draw alien with current size (includes pulse animation)
         pygame.draw.circle(screen, color, (int(self.x), int(self.y)), self.size)
         
+        # Draw evolution indicators (spikes for higher evolution)
+        total_upgrades = 0
+        if hasattr(self, '_upgrade_system_ref'):
+            for upgrade in self._upgrade_system_ref.upgrades.values():
+                total_upgrades += upgrade.level
+        
+        if total_upgrades >= 5:
+            # Draw spikes around the alien
+            num_spikes = min(8, total_upgrades // 2)
+            for i in range(num_spikes):
+                angle = (2 * math.pi * i) / num_spikes
+                spike_length = self.size // 3
+                start_x = self.x + math.cos(angle) * self.size
+                start_y = self.y + math.sin(angle) * self.size
+                end_x = self.x + math.cos(angle) * (self.size + spike_length)
+                end_y = self.y + math.sin(angle) * (self.size + spike_length)
+                pygame.draw.line(screen, color, (int(start_x), int(start_y)), (int(end_x), int(end_y)), 3)
+        
+        # Draw cargo count
         if self.cargo > 0:
             font = pygame.font.Font(None, 24)
             text = font.render(str(self.cargo), True, WHITE)

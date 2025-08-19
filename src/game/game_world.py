@@ -7,6 +7,8 @@ from .alien import Alien
 from .human import Human
 from .resource_manager import ResourceManager
 from .upgrade_system import UpgradeSystem
+from .particle_system import ParticleSystem
+from .quest_system import QuestSystem
 from .constants import *
 
 # Add ui module to path
@@ -33,6 +35,12 @@ class GameWorld:
         
         # Initialize upgrade system
         self.upgrade_system = UpgradeSystem(self.alien, self.resources)
+        
+        # Initialize particle system
+        self.particles = ParticleSystem()
+        
+        # Initialize quest system
+        self.quest_system = QuestSystem(self.resources, self.upgrade_system)
     
     def spawn_humans(self):
         num_humans = 20
@@ -64,6 +72,12 @@ class GameWorld:
         
         # Update HUD with delta time for animations
         self.hud.update(self, dt)
+        
+        # Update particle system
+        self.particles.update(dt)
+        
+        # Update quest system
+        self.quest_system.update()
     
     def check_collisions(self):
         alien_rect = self.alien.get_rect()
@@ -74,6 +88,8 @@ class GameWorld:
                 if alien_rect.colliderect(human_rect):
                     # Store human type in cargo - resources awarded at base
                     if self.alien.consume_human(human.resource_type):
+                        # Create particle effect for collection
+                        self.particles.create_collection_burst(human.x, human.y, human.color)
                         human.consume()  # Remove human from world
     
     def check_base_interaction(self):
@@ -82,6 +98,9 @@ class GameWorld:
         if distance_to_base < self.base_size and self.alien.cargo > 0:
             # Get cargo types and process them at base
             cargo_types = self.alien.return_to_base()
+            
+            # Create particle effect for base deposit
+            self.particles.create_base_deposit_effect(self.base_x, self.base_y, cargo_types)
             
             # Award resources based on cargo types
             for resource_type in cargo_types:
@@ -118,6 +137,9 @@ class GameWorld:
         
         # Draw alien
         self.alien.render(screen)
+        
+        # Draw particles (behind HUD)
+        self.particles.render(screen)
         
         # Draw enhanced HUD
         self.hud.render(screen, self)

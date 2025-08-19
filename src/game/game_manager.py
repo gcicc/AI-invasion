@@ -57,6 +57,11 @@ class GameManager:
                         self.pause_menu.visible = False
                 elif event.key == pygame.K_u and self.state == GameState.PLAYING:
                     self.upgrade_menu.visible = not self.upgrade_menu.visible
+                elif event.key == pygame.K_q and self.state == GameState.PLAYING:
+                    # Claim completed quests
+                    completed_quests = self.world.quest_system.get_completed_quests()
+                    for i in range(len(completed_quests)):
+                        self.world.quest_system.claim_quest_reward(0)  # Always claim first completed quest
                 elif event.key == pygame.K_r and self.state == GameState.GAME_OVER:
                     self.restart_game()
     

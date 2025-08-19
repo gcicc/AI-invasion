@@ -39,6 +39,11 @@ class UpgradeMenu:
     def purchase_upgrade(self, upgrade_name: str):
         success = self.game_world.upgrade_system.purchase_upgrade(upgrade_name)
         if success:
+            # Create particle effect at alien location
+            self.game_world.particles.create_upgrade_effect(
+                self.game_world.alien.x, 
+                self.game_world.alien.y
+            )
             print(f"Purchased {upgrade_name} upgrade!")
         else:
             print(f"Cannot afford {upgrade_name} upgrade")

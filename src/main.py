@@ -6,6 +6,7 @@ from game.game_manager import GameManager
 
 def main():
     pygame.init()
+    pygame.font.init()
     
     game = GameManager()
     game.run()

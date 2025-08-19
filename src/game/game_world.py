@@ -17,6 +17,9 @@ class GameWorld:
         self.base_size = 40
         
         self.spawn_humans()
+        
+        # Add frame counter for debugging
+        self.frame_count = 0
     
     def spawn_humans(self):
         num_humans = 20
@@ -33,6 +36,7 @@ class GameWorld:
                     break
     
     def update(self, dt: float):
+        self.frame_count += 1
         keys_pressed = pygame.key.get_pressed()
         
         self.alien.update(dt, keys_pressed)
@@ -63,19 +67,35 @@ class GameWorld:
             self.alien.return_to_base()
     
     def render(self, screen: pygame.Surface):
+        # Draw base (blue circle)
         pygame.draw.circle(screen, BLUE, (self.base_x, self.base_y), self.base_size)
         
-        font = pygame.font.Font(None, 24)
-        base_text = font.render("BASE", True, WHITE)
-        base_rect = base_text.get_rect(center=(self.base_x, self.base_y))
-        screen.blit(base_text, base_rect)
+        # Draw base label
+        try:
+            font = pygame.font.Font(None, 24)
+            base_text = font.render("BASE", True, WHITE)
+            base_rect = base_text.get_rect(center=(self.base_x, self.base_y))
+            screen.blit(base_text, base_rect)
+        except:
+            pass  # Skip text if font fails
         
+        # Draw humans
         for human in self.humans:
             human.render(screen)
         
+        # Draw alien
         self.alien.render(screen)
         
+        # Draw UI
         self.render_ui(screen)
+        
+        # Debug info - add frame counter and movement hint
+        try:
+            debug_font = pygame.font.Font(None, 24) 
+            debug_text = debug_font.render(f"Frame: {self.frame_count} | Use WASD to move alien", True, (255, 255, 0))
+            screen.blit(debug_text, (10, SCREEN_HEIGHT - 30))
+        except:
+            pass
     
     def render_ui(self, screen: pygame.Surface):
         font = pygame.font.Font(None, 36)

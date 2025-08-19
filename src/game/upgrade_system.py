@@ -104,6 +104,8 @@ class UpgradeSystem:
                 self.alien.max_cargo += int(upgrade.effect_value)
             elif upgrade.effect_target == "size":
                 self.alien.size += int(upgrade.effect_value)
+            elif upgrade.effect_target == "efficiency":
+                self.alien.efficiency_bonus += int(upgrade.effect_value)
     
     def get_upgrade_info(self, upgrade_name: str) -> Dict:
         upgrade = self.upgrades.get(upgrade_name)

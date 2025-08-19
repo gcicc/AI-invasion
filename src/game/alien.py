@@ -13,6 +13,7 @@ class Alien:
         self.cargo = 0
         self.meat = 0
         self.alive = True
+        self.efficiency_bonus = 0
         
         self.vel_x = 0.0
         self.vel_y = 0.0

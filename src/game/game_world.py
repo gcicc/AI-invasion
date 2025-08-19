@@ -73,14 +73,34 @@ class GameWorld:
                 human_rect = human.get_rect()
                 if alien_rect.colliderect(human_rect):
                     if self.alien.consume_human():
-                        human.consume()
+                        value = human.consume()
+                        
+                        # Add bonus resources for special human types
+                        from .human import HumanType
+                        if human.type == HumanType.VALUABLE:
+                            # Chance for eggs from valuable humans
+                            if random.random() < 0.3:  # 30% chance
+                                self.resources.add_eggs(1)
+                        elif human.type == HumanType.LARGE:
+                            # Chance for DNA from large humans
+                            if random.random() < 0.2:  # 20% chance
+                                self.resources.add_dna(1)
     
     def check_base_interaction(self):
         distance_to_base = ((self.alien.x - self.base_x) ** 2 + (self.alien.y - self.base_y) ** 2) ** 0.5
         
         if distance_to_base < self.base_size and self.alien.cargo > 0:
-            self.resources.add_meat(self.alien.cargo)
+            # Calculate meat from cargo with efficiency bonus
+            base_meat = self.alien.cargo
+            efficiency_bonus = getattr(self.alien, 'efficiency_bonus', 0)
+            total_meat = base_meat + efficiency_bonus
+            
+            self.resources.add_meat(total_meat)
             self.alien.return_to_base()
+            
+            # Small chance for cells on base return
+            if random.random() < 0.1:  # 10% chance
+                self.resources.add_cells(1)
     
     def render(self, screen: pygame.Surface):
         # Draw base (blue circle)

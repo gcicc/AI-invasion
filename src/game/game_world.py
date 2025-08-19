@@ -75,33 +75,28 @@ class GameWorld:
                     value = human.consume()  # Get value before consuming
                     if self.alien.consume_human(value):  # Pass value to alien
                         
-                        # Add bonus resources for special human types
+                        # Add the appropriate resource type based on human color
                         from .human import HumanType
-                        if human.type == HumanType.VALUABLE:
-                            # Chance for eggs from valuable humans
-                            if random.random() < 0.3:  # 30% chance
-                                self.resources.add_eggs(1)
-                        elif human.type == HumanType.LARGE:
-                            # Chance for DNA from large humans
-                            if random.random() < 0.2:  # 20% chance
-                                self.resources.add_dna(1)
+                        if human.type == HumanType.MEAT:
+                            self.resources.add_meat(1)
+                        elif human.type == HumanType.EGGS:
+                            self.resources.add_eggs(1)
+                        elif human.type == HumanType.DNA:
+                            self.resources.add_dna(1)
+                        elif human.type == HumanType.CELLS:
+                            self.resources.add_cells(1)
     
     def check_base_interaction(self):
         distance_to_base = ((self.alien.x - self.base_x) ** 2 + (self.alien.y - self.base_y) ** 2) ** 0.5
         
         if distance_to_base < self.base_size and self.alien.cargo > 0:
-            # Get cargo info and deposit at base
+            # Get cargo info and deposit at base  
             cargo_count, cargo_value = self.alien.return_to_base()
             
-            # Calculate meat from cargo value with efficiency bonus
+            # Apply efficiency bonus as extra meat
             efficiency_bonus = getattr(self.alien, 'efficiency_bonus', 0)
-            total_meat = cargo_value + efficiency_bonus
-            
-            self.resources.add_meat(total_meat)
-            
-            # Small chance for cells on base return
-            if random.random() < 0.1:  # 10% chance
-                self.resources.add_cells(1)
+            if efficiency_bonus > 0:
+                self.resources.add_meat(efficiency_bonus)
     
     def render(self, screen: pygame.Surface):
         # Draw base (blue circle)

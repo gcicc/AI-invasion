@@ -104,8 +104,10 @@ class HUD:
         screen.blit(self.cargo_label, (200, 35))
         self.cargo_bar.render(screen)
         
-        # Cargo text
+        # Cargo text with value
         cargo_text = f"{game_world.alien.cargo}/{game_world.alien.max_cargo}"
+        if hasattr(game_world.alien, 'cargo_value') and game_world.alien.cargo_value > 0:
+            cargo_text += f" (Value: {game_world.alien.cargo_value})"
         cargo_surface = self.font_small.render(cargo_text, True, WHITE)
         cargo_rect = cargo_surface.get_rect(center=(300, 20))
         screen.blit(cargo_surface, cargo_rect)

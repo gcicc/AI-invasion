@@ -72,8 +72,8 @@ class GameWorld:
             if human.alive:
                 human_rect = human.get_rect()
                 if alien_rect.colliderect(human_rect):
-                    if self.alien.consume_human():
-                        value = human.consume()
+                    value = human.consume()  # Get value before consuming
+                    if self.alien.consume_human(value):  # Pass value to alien
                         
                         # Add bonus resources for special human types
                         from .human import HumanType
@@ -90,13 +90,14 @@ class GameWorld:
         distance_to_base = ((self.alien.x - self.base_x) ** 2 + (self.alien.y - self.base_y) ** 2) ** 0.5
         
         if distance_to_base < self.base_size and self.alien.cargo > 0:
-            # Calculate meat from cargo with efficiency bonus
-            base_meat = self.alien.cargo
+            # Get cargo info and deposit at base
+            cargo_count, cargo_value = self.alien.return_to_base()
+            
+            # Calculate meat from cargo value with efficiency bonus
             efficiency_bonus = getattr(self.alien, 'efficiency_bonus', 0)
-            total_meat = base_meat + efficiency_bonus
+            total_meat = cargo_value + efficiency_bonus
             
             self.resources.add_meat(total_meat)
-            self.alien.return_to_base()
             
             # Small chance for cells on base return
             if random.random() < 0.1:  # 10% chance

@@ -119,10 +119,24 @@ class HUD:
         screen.blit(self.cargo_label, (200, 35))
         self.cargo_bar.render(screen)
         
-        # Cargo text with value
+        # Cargo text with resource breakdown
         cargo_text = f"{game_world.alien.cargo}/{game_world.alien.max_cargo}"
-        if hasattr(game_world.alien, 'cargo_value') and game_world.alien.cargo_value > 0:
-            cargo_text += f" (Value: {game_world.alien.cargo_value})"
+        if hasattr(game_world.alien, 'cargo_types') and game_world.alien.cargo_types:
+            # Count each resource type in cargo
+            meat_count = game_world.alien.cargo_types.count("meat")
+            eggs_count = game_world.alien.cargo_types.count("eggs")
+            dna_count = game_world.alien.cargo_types.count("dna")
+            cells_count = game_world.alien.cargo_types.count("cells")
+            
+            breakdown = []
+            if meat_count > 0: breakdown.append(f"R:{meat_count}")
+            if eggs_count > 0: breakdown.append(f"Y:{eggs_count}")
+            if dna_count > 0: breakdown.append(f"G:{dna_count}")
+            if cells_count > 0: breakdown.append(f"B:{cells_count}")
+            
+            if breakdown:
+                cargo_text += f" ({', '.join(breakdown)})"
+        
         cargo_surface = self.font_small.render(cargo_text, True, WHITE)
         cargo_rect = cargo_surface.get_rect(center=(300, 20))
         screen.blit(cargo_surface, cargo_rect)

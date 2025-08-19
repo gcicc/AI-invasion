@@ -11,7 +11,7 @@ class Alien:
         self.speed = ALIEN_SPEED
         self.max_cargo = ALIEN_MAX_CARGO
         self.cargo = 0
-        self.cargo_value = 0  # Track total value of carried humans
+        self.cargo_types = []  # Track types of carried humans for base deposit
         self.meat = 0
         self.alive = True
         self.efficiency_bonus = 0
@@ -48,20 +48,19 @@ class Alien:
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(self.x - self.size//2, self.y - self.size//2, self.size, self.size)
     
-    def consume_human(self, human_value: int = 1) -> bool:
+    def consume_human(self, human_type: str) -> bool:
         if self.cargo < self.max_cargo:
             self.cargo += 1
-            self.cargo_value += human_value
+            self.cargo_types.append(human_type)
             return True
         return False
     
     def return_to_base(self):
-        # Return both cargo count and total value
-        cargo_count = self.cargo
-        cargo_value = self.cargo_value
+        # Return cargo types for resource processing
+        cargo_types = self.cargo_types.copy()
         self.cargo = 0
-        self.cargo_value = 0
-        return cargo_count, cargo_value
+        self.cargo_types = []
+        return cargo_types
     
     def render(self, screen: pygame.Surface):
         if not self.alive:

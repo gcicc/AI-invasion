@@ -72,26 +72,27 @@ class GameWorld:
             if human.alive:
                 human_rect = human.get_rect()
                 if alien_rect.colliderect(human_rect):
-                    value = human.consume()  # Get value before consuming
-                    if self.alien.consume_human(value):  # Pass value to alien
-                        
-                        # Add the appropriate resource type based on human color
-                        from .human import HumanType
-                        if human.type == HumanType.MEAT:
-                            self.resources.add_meat(1)
-                        elif human.type == HumanType.EGGS:
-                            self.resources.add_eggs(1)
-                        elif human.type == HumanType.DNA:
-                            self.resources.add_dna(1)
-                        elif human.type == HumanType.CELLS:
-                            self.resources.add_cells(1)
+                    # Store human type in cargo - resources awarded at base
+                    if self.alien.consume_human(human.resource_type):
+                        human.consume()  # Remove human from world
     
     def check_base_interaction(self):
         distance_to_base = ((self.alien.x - self.base_x) ** 2 + (self.alien.y - self.base_y) ** 2) ** 0.5
         
         if distance_to_base < self.base_size and self.alien.cargo > 0:
-            # Get cargo info and deposit at base  
-            cargo_count, cargo_value = self.alien.return_to_base()
+            # Get cargo types and process them at base
+            cargo_types = self.alien.return_to_base()
+            
+            # Award resources based on cargo types
+            for resource_type in cargo_types:
+                if resource_type == "meat":
+                    self.resources.add_meat(1)
+                elif resource_type == "eggs":
+                    self.resources.add_eggs(1)
+                elif resource_type == "dna":
+                    self.resources.add_dna(1)
+                elif resource_type == "cells":
+                    self.resources.add_cells(1)
             
             # Apply efficiency bonus as extra meat
             efficiency_bonus = getattr(self.alien, 'efficiency_bonus', 0)

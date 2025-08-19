@@ -62,8 +62,8 @@ class GameWorld:
         
         self.resources.update(dt)
         
-        # Update HUD
-        self.hud.update(self)
+        # Update HUD with delta time for animations
+        self.hud.update(self, dt)
     
     def check_collisions(self):
         alien_rect = self.alien.get_rect()

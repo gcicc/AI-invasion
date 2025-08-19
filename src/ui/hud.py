@@ -38,34 +38,49 @@ class ProgressBar:
         pygame.draw.rect(screen, self.border_color, self.rect, 2)
 
 class ResourceDisplay:
-    def __init__(self, x: int, y: int, icon_text: str, font_size: int = 24):
+    def __init__(self, x: int, y: int, label: str, color: Tuple[int, int, int] = WHITE, font_size: int = 24):
         self.x = x
         self.y = y
-        self.icon_text = icon_text
+        self.label = label
+        self.color = color
         self.font = pygame.font.Font(None, font_size)
         self.value = 0
+        self.last_value = 0
+        self.highlight_timer = 0.0
         
-        # Pre-render icon
-        self.icon_surface = self.font.render(icon_text, True, WHITE)
+        # Pre-render label
+        self.label_surface = self.font.render(f"{label}:", True, self.color)
     
-    def update_value(self, value: int):
+    def update_value(self, value: int, dt: float = 0.0):
+        if value > self.last_value:
+            self.highlight_timer = 1.0  # Highlight for 1 second
+        self.last_value = self.value
         self.value = value
+        
+        if self.highlight_timer > 0:
+            self.highlight_timer -= dt
     
     def render(self, screen: pygame.Surface):
-        # Icon
-        screen.blit(self.icon_surface, (self.x, self.y))
+        # Label
+        screen.blit(self.label_surface, (self.x, self.y))
         
-        # Value
-        value_text = self.font.render(str(self.value), True, WHITE)
-        screen.blit(value_text, (self.x + 30, self.y))
+        # Value with highlight effect
+        value_color = WHITE
+        if self.highlight_timer > 0:
+            # Flash effect when value increases
+            flash_intensity = int(255 * (self.highlight_timer / 1.0))
+            value_color = (255, 255, flash_intensity)
+        
+        value_text = self.font.render(str(self.value), True, value_color)
+        screen.blit(value_text, (self.x + 60, self.y))
 
 class HUD:
     def __init__(self):
-        # Resource displays
-        self.meat_display = ResourceDisplay(10, 10, "🥩")
-        self.eggs_display = ResourceDisplay(10, 40, "🥚")  
-        self.dna_display = ResourceDisplay(10, 70, "🧬")
-        self.cells_display = ResourceDisplay(10, 100, "⚡")
+        # Resource displays with proper colors
+        self.meat_display = ResourceDisplay(10, 10, "Meat", (255, 100, 100))  # Red
+        self.eggs_display = ResourceDisplay(10, 40, "Eggs", (255, 255, 100))  # Yellow
+        self.dna_display = ResourceDisplay(10, 70, "DNA", (100, 255, 100))    # Green
+        self.cells_display = ResourceDisplay(10, 100, "Cells", (100, 200, 255))  # Blue
         
         # Progress bars
         self.cargo_bar = ProgressBar(200, 10, 200, 20, fill_color=(255, 165, 0))
@@ -77,19 +92,19 @@ class HUD:
         # Cargo label
         self.cargo_label = self.font_small.render("Cargo:", True, WHITE)
     
-    def update(self, game_world):
-        # Update resource displays
-        self.meat_display.update_value(game_world.resources.meat)
-        self.eggs_display.update_value(game_world.resources.eggs)
-        self.dna_display.update_value(game_world.resources.dna)
-        self.cells_display.update_value(game_world.resources.cells)
+    def update(self, game_world, dt: float = 0.0):
+        # Update resource displays with delta time for animations
+        self.meat_display.update_value(game_world.resources.meat, dt)
+        self.eggs_display.update_value(game_world.resources.eggs, dt)
+        self.dna_display.update_value(game_world.resources.dna, dt)
+        self.cells_display.update_value(game_world.resources.cells, dt)
         
         # Update progress bars
         self.cargo_bar.set_value(game_world.alien.cargo, game_world.alien.max_cargo)
     
     def render(self, screen: pygame.Surface, game_world):
         # Semi-transparent HUD background
-        hud_bg = pygame.Surface((420, 140))
+        hud_bg = pygame.Surface((450, 140))
         hud_bg.set_alpha(180)
         hud_bg.fill((0, 0, 0))
         screen.blit(hud_bg, (5, 5))

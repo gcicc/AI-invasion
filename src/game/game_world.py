@@ -56,11 +56,11 @@ class GameWorld:
                     self.humans.append(Human(x, y))
                     break
     
-    def update(self, dt: float):
+    def update(self, dt: float, mouse_pos=None):
         self.frame_count += 1
         keys_pressed = pygame.key.get_pressed()
         
-        self.alien.update(dt, keys_pressed)
+        self.alien.update(dt, keys_pressed, mouse_pos)
         
         for human in self.humans:
             human.update(dt)
@@ -78,6 +78,23 @@ class GameWorld:
         
         # Update quest system
         self.quest_system.update()
+    
+    def handle_mouse_click(self, mouse_pos: tuple, button: int):
+        """Handle mouse clicks for movement and interactions"""
+        mouse_x, mouse_y = mouse_pos
+        
+        if button == 1:  # Left click - move to position
+            self.alien.set_target(mouse_x, mouse_y)
+        elif button == 3:  # Right click - smart actions
+            # Check if right-clicking near base and alien has cargo
+            distance_to_base = ((mouse_x - self.base_x) ** 2 + (mouse_y - self.base_y) ** 2) ** 0.5
+            
+            if distance_to_base < 100 and self.alien.cargo > 0:
+                # Right-click near base with cargo = auto-move to base
+                self.alien.set_target(self.base_x, self.base_y)
+            else:
+                # Regular right-click movement
+                self.alien.set_target(mouse_x, mouse_y)
     
     def check_collisions(self):
         alien_rect = self.alien.get_rect()
@@ -137,6 +154,9 @@ class GameWorld:
         
         # Draw alien
         self.alien.render(screen)
+        
+        # Draw target indicator if moving to mouse click
+        self.alien.render_target_indicator(screen)
         
         # Draw particles (behind HUD)
         self.particles.render(screen)

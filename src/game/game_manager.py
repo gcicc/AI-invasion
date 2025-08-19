@@ -22,6 +22,9 @@ class GameManager:
         pygame.display.set_caption("AI Invasion RPG")
         self.clock = pygame.time.Clock()
         
+        # Set up mouse cursor
+        pygame.mouse.set_visible(True)
+        
         self.running = True
         self.state = GameState.MENU
         self.dt = 0.0
@@ -34,6 +37,8 @@ class GameManager:
         self.upgrade_menu = UpgradeMenu(self.world)
     
     def handle_events(self):
+        mouse_pos = pygame.mouse.get_pos()
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -45,6 +50,11 @@ class GameManager:
                 self.pause_menu.handle_event(event)
             elif self.upgrade_menu.visible:
                 self.upgrade_menu.handle_event(event)
+            
+            # Handle mouse clicks for gameplay
+            elif event.type == pygame.MOUSEBUTTONDOWN and self.state == GameState.PLAYING:
+                if not self.upgrade_menu.visible:  # Only if upgrade menu is closed
+                    self.world.handle_mouse_click(event.pos, event.button)
                 
             # Handle game events
             if event.type == pygame.KEYDOWN:
@@ -67,7 +77,8 @@ class GameManager:
     
     def update(self):
         if self.state == GameState.PLAYING:
-            self.world.update(self.dt)
+            mouse_pos = pygame.mouse.get_pos()
+            self.world.update(self.dt, mouse_pos)
     
     def render(self):
         self.screen.fill(BLACK)

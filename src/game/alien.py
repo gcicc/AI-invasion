@@ -22,29 +22,66 @@ class Alien:
         # Animation properties
         self.animation_timer = 0.0
         self.base_size = self.size
+        
+        # Mouse control properties
+        self.target_x = self.x
+        self.target_y = self.y
+        self.moving_to_target = False
+        self.auto_move_speed = 250  # Speed when moving to mouse click
     
-    def update(self, dt: float, keys_pressed):
+    def update(self, dt: float, keys_pressed, mouse_pos=None):
         if not self.alive:
             return
             
         self.vel_x = 0.0
         self.vel_y = 0.0
         
+        # Check for keyboard input first (overrides mouse movement)
+        keyboard_input = False
         if keys_pressed[pygame.K_w] or keys_pressed[pygame.K_UP]:
             self.vel_y = -1.0
+            keyboard_input = True
         if keys_pressed[pygame.K_s] or keys_pressed[pygame.K_DOWN]:
             self.vel_y = 1.0
+            keyboard_input = True
         if keys_pressed[pygame.K_a] or keys_pressed[pygame.K_LEFT]:
             self.vel_x = -1.0
+            keyboard_input = True
         if keys_pressed[pygame.K_d] or keys_pressed[pygame.K_RIGHT]:
             self.vel_x = 1.0
+            keyboard_input = True
         
-        if self.vel_x != 0 and self.vel_y != 0:
-            self.vel_x *= 0.707
-            self.vel_y *= 0.707
+        # If keyboard input, cancel mouse movement
+        if keyboard_input:
+            self.moving_to_target = False
+            if self.vel_x != 0 and self.vel_y != 0:
+                self.vel_x *= 0.707
+                self.vel_y *= 0.707
         
-        self.x += self.vel_x * self.speed * dt
-        self.y += self.vel_y * self.speed * dt
+        # Mouse movement (only if no keyboard input)
+        elif self.moving_to_target:
+            # Calculate direction to target
+            dx = self.target_x - self.x
+            dy = self.target_y - self.y
+            distance = math.sqrt(dx*dx + dy*dy)
+            
+            if distance > 5:  # Close enough threshold
+                # Normalize direction and apply speed
+                self.vel_x = (dx / distance)
+                self.vel_y = (dy / distance)
+            else:
+                # Reached target
+                self.moving_to_target = False
+                self.vel_x = 0.0
+                self.vel_y = 0.0
+        
+        # Apply movement
+        if keyboard_input:
+            self.x += self.vel_x * self.speed * dt
+            self.y += self.vel_y * self.speed * dt
+        elif self.moving_to_target:
+            self.x += self.vel_x * self.auto_move_speed * dt
+            self.y += self.vel_y * self.auto_move_speed * dt
         
         self.x = max(self.size, min(SCREEN_WIDTH - self.size, self.x))
         self.y = max(self.size, min(SCREEN_HEIGHT - self.size, self.y))
@@ -75,6 +112,12 @@ class Alien:
         self.cargo = 0
         self.cargo_types = []
         return cargo_types
+    
+    def set_target(self, x: float, y: float):
+        """Set mouse click target for movement"""
+        self.target_x = x
+        self.target_y = y
+        self.moving_to_target = True
     
     def get_evolution_color(self):
         """Get alien color based on upgrade levels"""
@@ -139,3 +182,20 @@ class Alien:
             text = font.render(str(self.cargo), True, WHITE)
             text_rect = text.get_rect(center=(int(self.x), int(self.y)))
             screen.blit(text, text_rect)
+    
+    def render_target_indicator(self, screen: pygame.Surface):
+        """Draw target indicator when moving to mouse click"""
+        if self.moving_to_target:
+            # Draw target crosshair
+            pygame.draw.circle(screen, (255, 255, 0), (int(self.target_x), int(self.target_y)), 8, 2)
+            pygame.draw.line(screen, (255, 255, 0), 
+                           (int(self.target_x - 12), int(self.target_y)), 
+                           (int(self.target_x + 12), int(self.target_y)), 2)
+            pygame.draw.line(screen, (255, 255, 0),
+                           (int(self.target_x), int(self.target_y - 12)),
+                           (int(self.target_x), int(self.target_y + 12)), 2)
+            
+            # Draw line from alien to target
+            pygame.draw.line(screen, (255, 255, 0, 100),
+                           (int(self.x), int(self.y)),
+                           (int(self.target_x), int(self.target_y)), 1)

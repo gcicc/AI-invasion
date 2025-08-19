@@ -157,10 +157,15 @@ class HUD:
         # Quest display
         self.render_quests(screen, game_world)
         
-        # Controls reminder
-        controls_text = "WASD: Move | ESC: Menu | U: Upgrades | Q: Claim Quests"
-        controls_surface = self.font_small.render(controls_text, True, (150, 150, 150))
-        screen.blit(controls_surface, (10, SCREEN_HEIGHT - 25))
+        # Controls reminder - split into two lines for better readability
+        controls_text1 = "WASD/Mouse: Move | ESC: Menu | U: Upgrades | Q: Claim Quests"
+        controls_text2 = "Left Click: Move to position | Right Click: Future abilities"
+        
+        controls_surface1 = self.font_small.render(controls_text1, True, (150, 150, 150))
+        controls_surface2 = self.font_small.render(controls_text2, True, (120, 120, 120))
+        
+        screen.blit(controls_surface1, (10, SCREEN_HEIGHT - 45))
+        screen.blit(controls_surface2, (10, SCREEN_HEIGHT - 25))
     
     def render_quests(self, screen: pygame.Surface, game_world):
         """Render active quests on the right side of screen"""

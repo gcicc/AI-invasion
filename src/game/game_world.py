@@ -1,0 +1,96 @@
+import pygame
+import random
+from typing import List
+from .alien import Alien
+from .human import Human
+from .resource_manager import ResourceManager
+from .constants import *
+
+class GameWorld:
+    def __init__(self):
+        self.alien = Alien(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.humans: List[Human] = []
+        self.resources = ResourceManager()
+        
+        self.base_x = 50
+        self.base_y = 50
+        self.base_size = 40
+        
+        self.spawn_humans()
+    
+    def spawn_humans(self):
+        num_humans = 20
+        for _ in range(num_humans):
+            while True:
+                x = random.randint(100, SCREEN_WIDTH - 100)
+                y = random.randint(100, SCREEN_HEIGHT - 100)
+                
+                distance_from_alien = ((x - self.alien.x) ** 2 + (y - self.alien.y) ** 2) ** 0.5
+                distance_from_base = ((x - self.base_x) ** 2 + (y - self.base_y) ** 2) ** 0.5
+                
+                if distance_from_alien > 100 and distance_from_base > 80:
+                    self.humans.append(Human(x, y))
+                    break
+    
+    def update(self, dt: float):
+        keys_pressed = pygame.key.get_pressed()
+        
+        self.alien.update(dt, keys_pressed)
+        
+        for human in self.humans:
+            human.update(dt)
+        
+        self.check_collisions()
+        self.check_base_interaction()
+        
+        self.resources.update(dt)
+    
+    def check_collisions(self):
+        alien_rect = self.alien.get_rect()
+        
+        for human in self.humans:
+            if human.alive:
+                human_rect = human.get_rect()
+                if alien_rect.colliderect(human_rect):
+                    if self.alien.consume_human():
+                        human.consume()
+    
+    def check_base_interaction(self):
+        distance_to_base = ((self.alien.x - self.base_x) ** 2 + (self.alien.y - self.base_y) ** 2) ** 0.5
+        
+        if distance_to_base < self.base_size and self.alien.cargo > 0:
+            self.resources.add_meat(self.alien.cargo)
+            self.alien.return_to_base()
+    
+    def render(self, screen: pygame.Surface):
+        pygame.draw.circle(screen, BLUE, (self.base_x, self.base_y), self.base_size)
+        
+        font = pygame.font.Font(None, 24)
+        base_text = font.render("BASE", True, WHITE)
+        base_rect = base_text.get_rect(center=(self.base_x, self.base_y))
+        screen.blit(base_text, base_rect)
+        
+        for human in self.humans:
+            human.render(screen)
+        
+        self.alien.render(screen)
+        
+        self.render_ui(screen)
+    
+    def render_ui(self, screen: pygame.Surface):
+        font = pygame.font.Font(None, 36)
+        y_offset = 10
+        
+        meat_text = font.render(f"Meat: {self.resources.meat}", True, WHITE)
+        screen.blit(meat_text, (10, y_offset))
+        y_offset += 40
+        
+        cargo_text = font.render(f"Cargo: {self.alien.cargo}/{self.alien.max_cargo}", True, WHITE)
+        screen.blit(cargo_text, (10, y_offset))
+        y_offset += 40
+        
+        if self.alien.cargo > 0:
+            distance_to_base = ((self.alien.x - self.base_x) ** 2 + (self.alien.y - self.base_y) ** 2) ** 0.5
+            if distance_to_base < self.base_size * 1.5:
+                hint_text = font.render("At base - cargo will be deposited!", True, (255, 255, 0))
+                screen.blit(hint_text, (10, y_offset))
